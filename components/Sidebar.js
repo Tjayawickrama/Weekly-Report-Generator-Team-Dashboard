@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   LayoutDashboard,
   BarChart3,
@@ -102,8 +103,8 @@ export default function Sidebar() {
       <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo */}
         <div className="sidebar-logo">
-          <div className="logo-icon">
-            <Zap size={20} />
+          <div className="logo-icon" style={{ background: 'transparent' }}>
+            <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
           </div>
           {!collapsed && (
             <div className="logo-text">

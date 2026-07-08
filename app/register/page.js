@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Mail,
   Lock,
@@ -119,8 +120,8 @@ export default function RegisterPage() {
         {/* Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-2xl)' }}>
           <div className="auth-brand">
-            <div className="brand-logo">
-              <Zap size={20} />
+            <div className="brand-logo" style={{ background: 'transparent', padding: 0, width: '40px', height: '40px' }}>
+              <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
             </div>
             <span className="brand-name">ProgressHub</span>
           </div>
