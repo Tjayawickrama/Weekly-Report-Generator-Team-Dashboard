@@ -60,7 +60,7 @@ export default function LoginPage() {
               <Zap size={20} />
             </div>
             <div>
-              <span className="brand-name">Pulse AI</span>
+              <span className="brand-name">ProgressHub</span>
               <span className="brand-badge" style={{ marginLeft: '8px' }}>Enterprise Edition</span>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function LoginPage() {
       <div className="auth-right">
         <div className="auth-form-card">
           <h1>Welcome back</h1>
-          <p className="auth-subtitle">Sign in to your Pulse AI workspace</p>
+          <p className="auth-subtitle">Sign in to your ProgressHub workspace</p>
 
           {error && (
             <div style={{
@@ -236,7 +236,7 @@ export default function LoginPage() {
           </div>
 
           <p style={{ textAlign: 'center', marginTop: 'var(--space-xl)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-            New to Pulse AI?{' '}
+            New to ProgressHub?{' '}
             <Link href="/register" style={{ color: 'var(--primary-light)', fontWeight: 500 }}>
               Create Account
             </Link>

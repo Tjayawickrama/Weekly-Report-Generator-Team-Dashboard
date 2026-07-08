@@ -107,7 +107,7 @@ export default function Sidebar() {
           </div>
           {!collapsed && (
             <div className="logo-text">
-              <span className="logo-name">Pulse AI</span>
+              <span className="logo-name">ProgressHub</span>
               <span className="logo-badge">Enterprise</span>
             </div>
           )}

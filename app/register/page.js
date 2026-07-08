@@ -122,7 +122,7 @@ export default function RegisterPage() {
             <div className="brand-logo">
               <Zap size={20} />
             </div>
-            <span className="brand-name">Pulse AI</span>
+            <span className="brand-name">ProgressHub</span>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p style={{ color: 'var(--text-secondary)', textAlign: 'center', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-2xl)' }}>
-          Start managing your weekly reports with Pulse AI
+          Start managing your weekly reports with ProgressHub
         </p>
 
         {error && (

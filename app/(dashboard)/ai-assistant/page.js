@@ -20,7 +20,7 @@ export default function AIAssistantPage() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hello! I'm Pulse AI, your intelligent team analytics assistant. I can help you analyze team reports, identify trends, and provide insights about your team's performance.\n\nHere are some things you can ask me:\n• \"What did the team work on last week?\"\n• \"Who has the most open blockers?\"\n• \"Summarize the latest reports\"\n• \"Show me project workload distribution\"",
+      content: "Hello! I'm ProgressHub Assistant, your intelligent team analytics assistant. I can help you analyze team reports, identify trends, and provide insights about your team's performance.\n\nHere are some things you can ask me:\n• \"What did the team work on last week?\"\n• \"Who has the most open blockers?\"\n• \"Summarize the latest reports\"\n• \"Show me project workload distribution\"",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -116,7 +116,7 @@ export default function AIAssistantPage() {
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, margin: 0 }}>Pulse AI Assistant</h2>
+              <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, margin: 0 }}>ProgressHub Assistant</h2>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
                 Online

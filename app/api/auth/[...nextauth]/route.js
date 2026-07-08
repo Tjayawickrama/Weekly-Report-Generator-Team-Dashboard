@@ -13,34 +13,27 @@ const handler = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Please provide email and password');
-        }
-
-        await connectDB();
-
-        const user = await User.findOne({ email: credentials.email }).select('+password');
-
-        if (!user) {
-          throw new Error('No user found with this email');
-        }
-
-        if (!user.isActive) {
-          throw new Error('Your account has been deactivated');
-        }
-
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          throw new Error('Invalid password');
+        // MOCK AUTHENTICATION FOR FRONTEND ONLY MODE
+        // No MongoDB connection required
+        
+        // Determine role based on email for testing different views
+        let role = 'team_member';
+        let title = 'Developer';
+        
+        if (credentials.email.includes('admin')) {
+          role = 'admin';
+          title = 'Administrator';
+        } else if (credentials.email.includes('manager')) {
+          role = 'manager';
+          title = 'Engineering Manager';
         }
 
         return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          title: user.title,
+          id: 'mock-user-id-123',
+          name: credentials.email.split('@')[0].charAt(0).toUpperCase() + credentials.email.split('@')[0].slice(1),
+          email: credentials.email,
+          role: role,
+          title: title,
         };
       },
     }),

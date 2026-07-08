@@ -2,7 +2,7 @@
   "name": "pulse-ai-weekly-reports",
   "version": "0.1.0",
   "private": true,
-  "description": "Pulse AI - Weekly Report Generator with AI-powered insights",
+  "description": "ProgressHub - Weekly Report Generator with AI-powered insights",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

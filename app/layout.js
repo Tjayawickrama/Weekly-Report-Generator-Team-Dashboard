@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Pulse AI — Weekly Report Generator',
+  title: 'ProgressHub — Weekly Report Generator',
   description: 'Submit structured weekly work reports and analyze team performance with AI-powered insights.',
   keywords: ['weekly reports', 'team management', 'productivity', 'AI assistant'],
 };
