@@ -1,0 +1,27 @@
+{
+  "name": "pulse-ai-weekly-reports",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pulse AI - Weekly Report Generator with AI-powered insights",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "lucide-react": "^1.23.0",
+    "mongoose": "^9.7.4",
+    "next": "^14.2.35",
+    "next-auth": "^4.24.14",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
