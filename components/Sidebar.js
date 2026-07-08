@@ -3,7 +3,6 @@
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   LayoutDashboard,
   BarChart3,
@@ -15,7 +14,6 @@ import {
   Plus,
   LogOut,
   ChevronLeft,
-  Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -104,7 +102,7 @@ export default function Sidebar() {
         {/* Logo */}
         <div className="sidebar-logo">
           <div className="logo-icon" style={{ background: 'transparent' }}>
-            <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
           </div>
           {!collapsed && (
             <div className="logo-text">
@@ -120,7 +118,7 @@ export default function Sidebar() {
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <ChevronLeft size={16} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }} />
+          <ChevronLeft size={14} style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }} />
         </button>
 
         {/* Generate Report Button */}
@@ -186,8 +184,10 @@ export default function Sidebar() {
           left: 0;
           width: var(--sidebar-width);
           height: 100vh;
-          background: var(--bg-secondary);
-          border-right: 1px solid var(--border);
+          background: rgba(11, 11, 21, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-right: 1px solid rgba(255, 255, 255, 0.05);
           display: flex;
           flex-direction: column;
           z-index: 100;
@@ -204,18 +204,15 @@ export default function Sidebar() {
           align-items: center;
           gap: var(--space-md);
           padding: var(--space-xl) var(--space-lg);
-          border-bottom: 1px solid var(--border);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .logo-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: var(--radius-md);
-          background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+          width: 32px;
+          height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
           flex-shrink: 0;
         }
 
@@ -227,26 +224,29 @@ export default function Sidebar() {
         .logo-name {
           font-size: var(--text-lg);
           font-weight: 700;
-          color: var(--text-primary);
+          background: linear-gradient(135deg, #FFFFFF 0%, #A78BFA 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
           letter-spacing: -0.02em;
         }
 
         .logo-badge {
-          font-size: var(--text-xs);
-          color: var(--text-muted);
-          letter-spacing: 0.05em;
+          font-size: 10px;
+          color: var(--text-tertiary);
+          letter-spacing: 0.08em;
           text-transform: uppercase;
+          font-weight: 600;
         }
 
         .sidebar-toggle {
           position: absolute;
-          top: 26px;
-          right: -12px;
-          width: 24px;
-          height: 24px;
+          top: 28px;
+          right: 12px;
+          width: 22px;
+          height: 22px;
           border-radius: var(--radius-full);
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border);
+          background: rgba(26, 26, 46, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           color: var(--text-secondary);
           display: flex;
           align-items: center;
@@ -264,74 +264,102 @@ export default function Sidebar() {
         .sidebar-toggle:hover {
           background: var(--bg-glass-hover);
           color: var(--text-primary);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .sidebar-cta {
+        :global(.sidebar-cta) {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: var(--space-sm);
           margin: var(--space-lg) var(--space-lg) 0;
-          padding: 10px;
+          padding: 11px;
           background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-          color: white;
+          color: white !important;
           border-radius: var(--radius-md);
           font-size: var(--text-sm);
-          font-weight: 500;
+          font-weight: 600;
           text-decoration: none;
           transition: all var(--transition-base);
-          box-shadow: 0 2px 8px var(--primary-glow);
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
 
-        .sidebar-cta:hover {
-          box-shadow: 0 4px 16px var(--primary-glow);
-          transform: translateY(-1px);
-          color: white;
+        :global(.sidebar-cta:hover) {
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+          transform: translateY(-1.5px);
+          filter: brightness(1.08);
         }
 
         .sidebar-nav {
           flex: 1;
-          padding: var(--space-lg) var(--space-sm);
+          padding: var(--space-xl) var(--space-sm);
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
           overflow-y: auto;
         }
 
-        .sidebar-nav-item {
+        :global(.sidebar-nav-item) {
           display: flex;
           align-items: center;
-          gap: var(--space-md);
-          padding: 10px 14px;
+          gap: 14px;
+          padding: 12px 16px;
+          margin: 1px 8px;
           border-radius: var(--radius-md);
-          color: var(--text-secondary);
-          font-size: var(--text-sm);
-          font-weight: 400;
+          color: var(--text-secondary) !important;
+          font-size: var(--text-base);
+          font-weight: 500;
           text-decoration: none;
-          transition: all var(--transition-fast);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
         }
 
-        .sidebar-nav-item:hover {
-          background: var(--bg-glass);
+        :global(.sidebar-nav-item) :global(svg) {
+          color: var(--text-tertiary);
+          transition: all 0.2s ease;
+        }
+
+        :global(.sidebar-nav-item:hover) {
+          background: rgba(255, 255, 255, 0.03);
+          color: var(--text-primary) !important;
+          transform: translateX(4px);
+        }
+
+        :global(.sidebar-nav-item:hover) :global(svg) {
           color: var(--text-primary);
+          transform: scale(1.05);
         }
 
-        .sidebar-nav-item.active {
-          background: var(--primary-subtle);
-          color: var(--primary-light);
-          font-weight: 500;
+        :global(.sidebar-nav-item.active) {
+          background: linear-gradient(90deg, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.02) 100%);
+          color: #A78BFA !important;
+          font-weight: 600;
         }
 
-        .nav-active-indicator {
+        :global(.sidebar-nav-item.active) :global(svg) {
+          color: #A78BFA;
+        }
+
+        :global(.nav-active-indicator) {
           position: absolute;
           left: 0;
           top: 50%;
           transform: translateY(-50%);
           width: 3px;
-          height: 20px;
-          border-radius: 0 3px 3px 0;
+          height: 18px;
+          border-radius: 0 4px 4px 0;
           background: var(--primary);
+          box-shadow: 0 0 10px var(--primary);
+        }
+
+        .sidebar-collapsed :global(.sidebar-nav-item) {
+          padding: 12px;
+          margin: 2px 10px;
+          justify-content: center;
+        }
+
+        .sidebar-collapsed :global(.sidebar-nav-item:hover) {
+          transform: none;
         }
 
         .sidebar-user {
@@ -339,8 +367,24 @@ export default function Sidebar() {
           align-items: center;
           gap: var(--space-md);
           padding: var(--space-lg);
-          border-top: 1px solid var(--border);
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
           margin-top: auto;
+          background: rgba(0, 0, 0, 0.15);
+        }
+
+        .avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: var(--radius-full);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 700;
+          font-size: var(--text-sm);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          flex-shrink: 0;
         }
 
         .sidebar-user-info {
@@ -351,7 +395,7 @@ export default function Sidebar() {
         .sidebar-user-name {
           display: block;
           font-size: var(--text-sm);
-          font-weight: 500;
+          font-weight: 600;
           color: var(--text-primary);
           white-space: nowrap;
           overflow: hidden;
@@ -368,8 +412,8 @@ export default function Sidebar() {
         }
 
         .sidebar-logout {
-          width: 32px;
-          height: 32px;
+          width: 30px;
+          height: 30px;
           border-radius: var(--radius-md);
           background: transparent;
           border: none;
