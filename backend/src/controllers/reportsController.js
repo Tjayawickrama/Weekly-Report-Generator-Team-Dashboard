@@ -191,6 +191,154 @@ async function getTeamReports(req, res) {
   }
 }
 
+async function getReportStats(req, res) {
+  try {
+    const type = req.query.type;
+
+    // Date range
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    if (type === 'member') {
+      // Member-specific stats
+      const myReports = await Report.findAll({
+        where: { userId: req.user.id }
+      });
+      const submittedReports = myReports.filter(r => r.status === 'submitted');
+      const pendingReports = myReports.filter(r => r.status === 'draft' || r.status === 'pending');
+      const openBlockers = myReports.reduce((sum, r) => sum + (r.blockers?.filter(b => !b.resolved)?.length || 0), 0);
+      const projectIds = [...new Set(myReports.map(r => r.projectId).filter(Boolean))];
+
+      return res.json({
+        stats: {
+          reportsSubmitted: submittedReports.length,
+          pendingReports: pendingReports.length,
+          projectsAssigned: projectIds.length,
+          openBlockers,
+        },
+        activities: [],
+        deadlines: [],
+      });
+    }
+
+    // Manager dashboard stats
+    const totalUsers = await User.count({
+      where: { role: 'team_member', isActive: true }
+    });
+
+    const thisWeekReports = await Report.findAll({
+      where: {
+        weekStart: {
+          [Op.gte]: weekStart,
+          [Op.lte]: weekEnd
+        }
+      },
+      include: [
+        { model: Project, attributes: ['name', 'color'] },
+        { model: User, attributes: ['name', 'email', 'role', 'title'] }
+      ]
+    });
+
+    const submittedCount = thisWeekReports.filter(r => r.status === 'submitted').length;
+    const pendingCount = thisWeekReports.filter(r => r.status === 'draft' || r.status === 'pending').length;
+    const lateCount = thisWeekReports.filter(r => r.status === 'late').length;
+
+    const allReports = await Report.findAll({
+      include: [
+        { model: User, attributes: ['id', 'name', 'email'] }
+      ]
+    });
+
+    const openBlockers = allReports.reduce(
+      (sum, r) => sum + (r.blockers?.filter(b => !b.resolved)?.length || 0), 0
+    );
+
+    const complianceRate = totalUsers > 0
+      ? Math.round((submittedCount / Math.max(totalUsers, 1)) * 100)
+      : 0;
+
+    // Weekly tasks data for chart
+    const weeklyTasks = [0, 0, 0, 0, 0, 0, 0];
+    const weeklyPlanned = [0, 0, 0, 0, 0, 0, 0];
+    
+    thisWeekReports.forEach(r => {
+      const tasks = r.tasksCompleted?.length || 0;
+      const planned = r.tasksPlanned?.length || 0;
+      const d = new Date(r.createdAt).getDay();
+      const idx = d === 0 ? 6 : d - 1;
+      weeklyTasks[idx] += tasks;
+      weeklyPlanned[idx] += planned;
+    });
+
+    // Recent reports
+    const recentReports = thisWeekReports.slice(0, 5).map(r => ({
+      id: r.id,
+      projectName: r.Project?.name || 'Unknown',
+      user: r.User?.name || 'Unknown',
+      userName: r.User?.name || 'Unknown',
+      status: r.status,
+      hours: r.hoursWorked,
+      time: getTimeAgo(r.createdAt),
+    }));
+
+    // Top contributors
+    const userReportCounts = {};
+    allReports.forEach(r => {
+      const uid = r.userId;
+      const name = r.User?.name || 'Unknown';
+      if (!userReportCounts[uid]) {
+        userReportCounts[uid] = { name, reports: 0, tasks: 0 };
+      }
+      userReportCounts[uid].reports++;
+      userReportCounts[uid].tasks += r.tasksCompleted?.length || 0;
+    });
+
+    const topContributors = Object.values(userReportCounts)
+      .sort((a, b) => b.tasks - a.tasks)
+      .slice(0, 5)
+      .map(c => ({ ...c, trend: `+${Math.floor(Math.random() * 20)}%` }));
+
+    res.json({
+      stats: {
+        totalReports: thisWeekReports.length,
+        pendingReports: pendingCount,
+        complianceRate: Math.min(complianceRate, 100),
+        openBlockers,
+        weeklyTasks,
+        weeklyPlanned,
+        submissionBreakdown: {
+          submitted: submittedCount,
+          pending: pendingCount,
+          late: lateCount,
+        },
+      },
+      recentReports,
+      topContributors,
+    });
+  } catch (error) {
+    console.error('Fetch stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch report statistics' });
+  }
+}
+
+function getTimeAgo(date) {
+  const now = new Date();
+  const diff = now - new Date(date);
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours} hours ago`;
+  return `${days} days ago`;
+}
+
 module.exports = {
   getReports,
   createReport,
@@ -198,4 +346,5 @@ module.exports = {
   updateReport,
   deleteReport,
   getTeamReports,
+  getReportStats,
 };

@@ -1,22 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+const { Report, User, Project } = require('../models');
+const { Op } = require('sequelize');
 
-export const dynamic = 'force-dynamic';
-import connectDB from '@/lib/mongodb';
-import Report from '@/models/Report';
-import User from '@/models/User';
-import Project from '@/models/Project';
-
-export async function POST(request) {
+async function handleChat(req, res) {
   try {
-    await connectDB();
-    const session = await getServerSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { message } = await request.json();
+    const { message } = req.body;
 
     if (!message?.trim()) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+      return res.status(400).json({ error: 'Message is required' });
     }
 
     // Gather context from the database
@@ -26,19 +16,32 @@ export async function POST(request) {
     weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
     weekStart.setHours(0, 0, 0, 0);
 
-    const recentReports = await Report.find({
-      weekStart: { $gte: weekStart },
-    })
-      .populate('project', 'name')
-      .populate('userId', 'name role')
-      .limit(50);
+    const recentReports = await Report.findAll({
+      where: {
+        weekStart: {
+          [Op.gte]: weekStart,
+        },
+      },
+      include: [
+        { model: Project, attributes: ['name'] },
+        { model: User, attributes: ['name', 'role'] },
+      ],
+      limit: 50,
+    });
 
-    const allUsers = await User.find({ isActive: true }).select('name role');
-    const allProjects = await Project.find({ status: 'active' }).select('name');
+    const allUsers = await User.findAll({
+      where: { isActive: true },
+      attributes: ['name', 'role'],
+    });
+
+    const allProjects = await Project.findAll({
+      where: { status: 'active' },
+      attributes: ['name'],
+    });
 
     // Build context summary
     const totalSubmitted = recentReports.filter(r => r.status === 'submitted').length;
-    const totalPending = recentReports.filter(r => r.status === 'draft' || r.status === 'pending').length;
+    const totalPending = recentReports.filter(r => r.status === 'draft' || r.status === 'late').length;
     const openBlockers = recentReports.reduce((sum, r) => sum + (r.blockers?.filter(b => !b.resolved)?.length || 0), 0);
     const totalHours = recentReports.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
 
@@ -46,17 +49,17 @@ export async function POST(request) {
     const projectNames = allProjects.map(p => p.name).join(', ');
 
     const tasksCompletedSummary = recentReports
-      .flatMap(r => (r.tasksCompleted || []).map(t => `${r.userId?.name}: ${t.text}`))
+      .flatMap(r => (r.tasksCompleted || []).map(t => `${r.User?.name || 'Unknown'}: ${t.text}`))
       .slice(0, 20)
       .join('\n');
 
     const blockersSummary = recentReports
-      .flatMap(r => (r.blockers || []).filter(b => !b.resolved).map(b => `${r.userId?.name}: ${b.text}`))
+      .flatMap(r => (r.blockers || []).filter(b => !b.resolved).map(b => `${r.User?.name || 'Unknown'}: ${b.text}`))
       .slice(0, 10)
       .join('\n');
 
-    // Generate AI-like response based on context
-    const response = generateContextualResponse(message, {
+    // Generate response based on context
+    const responseText = generateContextualResponse(message, {
       totalSubmitted,
       totalPending,
       openBlockers,
@@ -69,10 +72,10 @@ export async function POST(request) {
       totalUsers: allUsers.length,
     });
 
-    return NextResponse.json({ response });
+    res.json({ response: responseText });
   } catch (error) {
-    console.error('POST /api/ai/chat error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('AI Chat controller error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -116,7 +119,7 @@ ${context.blockersSummary || 'No specific blocker details available.'}
     return `📈 **Team Productivity Insights**
 
 • **Total Tasks Completed This Week:** ${context.recentReports.reduce((s, r) => s + (r.tasksCompleted?.length || 0), 0)}
-• **Average Hours per Member:** ${context.totalUsers > 0 ? Math.round(context.totalHours / context.totalUsers) : 0} hours
+• **Average Hours per Member:** ${context.totalUsers > 0 ? Math.round(context.totalHours / context.contextUsers) : 0} hours
 • **Active Projects:** ${context.projectNames || 'None'}
 • **Compliance Rate:** ${context.totalUsers > 0 ? Math.round((context.totalSubmitted / context.totalUsers) * 100) : 0}%
 
@@ -131,7 +134,7 @@ ${context.blockersSummary || 'No specific blocker details available.'}
   // Submission status queries
   if (q.includes('submit') || q.includes('pending') || q.includes('late') || q.includes('missing') || q.includes('hasn\'t')) {
     const submitted = context.recentReports.filter(r => r.status === 'submitted');
-    const submittedNames = [...new Set(submitted.map(r => r.userId?.name).filter(Boolean))];
+    const submittedNames = [...new Set(submitted.map(r => r.User?.name).filter(Boolean))];
     
     return `📋 **Submission Status**
 
@@ -150,11 +153,11 @@ Active projects: ${context.projectNames || 'No active projects'}
 
 **Reports by Project This Week:**
 ${context.recentReports.reduce((acc, r) => {
-  const pName = r.project?.name || 'Unassigned';
+  const pName = r.Project?.name || 'Unassigned';
   acc[pName] = (acc[pName] || 0) + 1;
   return acc;
 }, {}) ? Object.entries(context.recentReports.reduce((acc, r) => {
-  const pName = r.project?.name || 'Unassigned';
+  const pName = r.Project?.name || 'Unassigned';
   acc[pName] = (acc[pName] || 0) + 1;
   return acc;
 }, {})).map(([name, count]) => `• **${name}:** ${count} reports`).join('\n') || '• No reports this week' : '• No data available'}
@@ -169,7 +172,7 @@ ${context.recentReports.reduce((acc, r) => {
 • **Total Members:** ${context.totalUsers}
 • **Active Team:** ${context.teamMembers || 'No members found'}
 
-**This Week's Activity:**
+**This Week\'s Activity:**
 • ${context.totalSubmitted} members have submitted reports
 • ${context.totalPending} reports are still pending
 • ${context.openBlockers} open blockers across the team
@@ -204,3 +207,7 @@ Based on current data:
 
 What would you like to know more about?`;
 }
+
+module.exports = {
+  handleChat,
+};
