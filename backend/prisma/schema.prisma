@@ -1,0 +1,81 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  team_member
+  manager
+  admin
+}
+
+enum ProjectStatus {
+  active
+  completed
+  archived
+}
+
+enum ReportStatus {
+  draft
+  submitted
+  late
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(60)
+  email     String    @unique @db.VarChar(191)
+  password  String    @db.VarChar(191)
+  role      Role      @default(team_member)
+  title     String    @default("Team Member") @db.VarChar(100)
+  avatar    String?   @db.VarChar(255)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  reports         Report[]
+  createdProjects Project[] @relation("ProjectCreator")
+  projects        Project[] @relation("ProjectMembers")
+}
+
+model Project {
+  id             String        @id @default(uuid())
+  name           String        @db.VarChar(100)
+  description    String        @default("") @db.VarChar(500)
+  color          String        @default("#7C3AED") @db.VarChar(7)
+  status         ProjectStatus @default(active)
+  tasksCompleted Int           @default(0)
+  efficiency     Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  createdBy   User     @relation("ProjectCreator", fields: [createdById], references: [id])
+  createdById String
+  members     User[]   @relation("ProjectMembers")
+  reports     Report[]
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  weekStart      DateTime
+  weekEnd        DateTime
+  hoursWorked    Float        @default(0)
+  notes          String       @default("") @db.VarChar(2000)
+  status         ReportStatus @default(draft)
+  submittedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  tasksCompleted Json
+  tasksPlanned   Json
+  blockers       Json
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+}

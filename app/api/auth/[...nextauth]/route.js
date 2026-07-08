@@ -1,8 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import connectDB from '@/lib/mongodb';
-import User from '@/models/User';
+
+export const dynamic = 'force-dynamic';
 
 const handler = NextAuth({
   providers: [
@@ -13,28 +12,37 @@ const handler = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // MOCK AUTHENTICATION FOR FRONTEND ONLY MODE
-        // No MongoDB connection required
-        
-        // Determine role based on email for testing different views
-        let role = 'team_member';
-        let title = 'Developer';
-        
-        if (credentials.email.includes('admin')) {
-          role = 'admin';
-          title = 'Administrator';
-        } else if (credentials.email.includes('manager')) {
-          role = 'manager';
-          title = 'Engineering Manager';
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Please enter an email and password');
         }
 
-        return {
-          id: 'mock-user-id-123',
-          name: credentials.email.split('@')[0].charAt(0).toUpperCase() + credentials.email.split('@')[0].slice(1),
-          email: credentials.email,
-          role: role,
-          title: title,
-        };
+        try {
+          const res = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          const data = await res.json();
+
+          if (res.ok && data.token) {
+            return {
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              role: data.user.role,
+              title: data.user.title,
+              token: data.token, // Store the Express JWT
+            };
+          } else {
+            throw new Error(data.error || 'Invalid credentials');
+          }
+        } catch (error) {
+          throw new Error(error.message || 'Server connection failed');
+        }
       },
     }),
   ],
@@ -48,6 +56,7 @@ const handler = NextAuth({
         token.id = user.id;
         token.role = user.role;
         token.title = user.title;
+        token.accessToken = user.token; // Pass Express JWT to token
       }
       return token;
     },
@@ -56,6 +65,7 @@ const handler = NextAuth({
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.title = token.title;
+        session.user.token = token.accessToken; // Pass Express JWT to frontend session
       }
       return session;
     },
