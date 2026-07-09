@@ -18,6 +18,7 @@ import {
 
 export default function ReportHistoryPage() {
   const { data: session } = useSession();
+  const isManager = session?.user?.role === 'manager' || session?.user?.role === 'admin';
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -30,11 +31,13 @@ export default function ReportHistoryPage() {
   useEffect(() => {
     fetchReports();
     fetchProjects();
-  }, []);
+  }, [isManager]);
 
   const fetchReports = async () => {
     try {
-      const res = await fetch('/api/reports');
+      // Managers/Admins see ALL team reports; team members see only their own
+      const url = isManager ? '/api/reports/team?period=all' : '/api/reports';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setReports(data.reports || []);
@@ -71,8 +74,10 @@ export default function ReportHistoryPage() {
     if (projectFilter && r.projectId !== projectFilter && r.Project?.id !== projectFilter) return false;
     if (search) {
       const s = search.toLowerCase();
-      const projectName = r.project?.name || '';
+      const projectName = r.Project?.name || r.project?.name || '';
+      const memberName = r.userId?.name || '';
       return projectName.toLowerCase().includes(s) ||
+        memberName.toLowerCase().includes(s) ||
         r.tasksCompleted?.some(t => t.text.toLowerCase().includes(s));
     }
     return true;
@@ -125,17 +130,19 @@ export default function ReportHistoryPage() {
         <div className="page-header-row">
           <div>
             <h1>Report History</h1>
-            <p>View and manage your weekly reports</p>
+            <p>{isManager ? 'All team weekly reports' : 'View and manage your weekly reports'}</p>
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
             <button className="btn btn-secondary" onClick={exportCSV}>
               <Download size={16} />
               Export CSV
             </button>
-            <Link href="/reports/create" className="btn btn-primary">
-              <Plus size={16} />
-              New Report
-            </Link>
+            {!isManager && (
+              <Link href="/reports/create" className="btn btn-primary">
+                <Plus size={16} />
+                New Report
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -183,11 +190,13 @@ export default function ReportHistoryPage() {
               <FileText size={28} />
             </div>
             <h3>No Reports Found</h3>
-            <p>You haven&apos;t created any reports yet. Start by creating your first weekly report.</p>
-            <Link href="/reports/create" className="btn btn-primary" style={{ marginTop: 'var(--space-lg)' }}>
-              <Plus size={16} />
-              Create Report
-            </Link>
+            <p>{isManager ? 'No team reports match your current filters.' : "You haven't created any reports yet. Start by creating your first weekly report."}</p>
+            {!isManager && (
+              <Link href="/reports/create" className="btn btn-primary" style={{ marginTop: 'var(--space-lg)' }}>
+                <Plus size={16} />
+                Create Report
+              </Link>
+            )}
           </div>
         ) : (
           <>
@@ -195,6 +204,7 @@ export default function ReportHistoryPage() {
               <thead>
                 <tr>
                   <th>Week</th>
+                  {isManager && <th>Member</th>}
                   <th>Project</th>
                   <th>Tasks</th>
                   <th>Hours</th>
@@ -209,9 +219,19 @@ export default function ReportHistoryPage() {
                     <td style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: 'var(--text-sm)' }}>
                       {formatWeek(report.weekStart, report.weekEnd)}
                     </td>
+                    {isManager && (
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                          <div className="avatar avatar-sm" style={{ background: 'linear-gradient(135deg, #7C3AED, #3B82F6)', fontSize: '10px' }}>
+                            {(report.userId?.name || 'U').charAt(0)}
+                          </div>
+                          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>{report.userId?.name || 'Unknown'}</span>
+                        </div>
+                      </td>
+                    )}
                     <td>
                       <span className="tag">
-                        {report.project?.name || 'Unknown'}
+                        {report.Project?.name || report.project?.name || 'Unknown'}
                       </span>
                     </td>
                     <td>
