@@ -207,7 +207,7 @@ export default function UserManagementPage() {
           </thead>
           <tbody>
             {paginatedUsers.map((user, idx) => (
-              <tr key={user._id}>
+              <tr key={user.id}>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                     <div className="avatar" style={{ background: avatarColors[idx % avatarColors.length] }}>
@@ -223,7 +223,7 @@ export default function UserManagementPage() {
                   <select
                     className="filter-select"
                     value={user.role}
-                    onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                    onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                     style={{ width: 'auto', padding: '4px 28px 4px 8px', fontSize: 'var(--text-xs)' }}
                   >
                     <option value="team_member">Team Member</option>
@@ -242,8 +242,8 @@ export default function UserManagementPage() {
                     <button
                       className="btn-icon"
                       style={{ width: '30px', height: '30px' }}
-                      onClick={() => handleDelete(user._id)}
-                      disabled={user._id === session?.user?.id}
+                      onClick={() => handleDelete(user.id)}
+                      disabled={user.id === session?.user?.id}
                     >
                       <Trash2 size={14} />
                     </button>

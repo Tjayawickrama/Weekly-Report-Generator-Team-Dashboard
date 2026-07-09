@@ -155,33 +155,63 @@ async function deleteReport(req, res) {
 
 async function getTeamReports(req, res) {
   try {
+    const { period, dateFrom, dateTo } = req.query;
+
+    let whereClause = { status: { [Op.ne]: 'draft' } };
+
+    if (dateFrom && dateTo) {
+      whereClause.weekStart = { [Op.gte]: new Date(dateFrom) };
+      whereClause.weekEnd = { [Op.lte]: new Date(dateTo + 'T23:59:59') };
+    } else {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+
+      if (period === 'this_week') {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        whereClause.weekStart = { [Op.gte]: weekStart };
+        whereClause.weekEnd = { [Op.lte]: weekEnd };
+      } else if (period === 'last_week') {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        whereClause.weekStart = { [Op.gte]: weekStart };
+        whereClause.weekEnd = { [Op.lte]: weekEnd };
+      } else if (period === 'this_month') {
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        whereClause.weekStart = { [Op.gte]: monthStart };
+        whereClause.weekEnd = { [Op.lte]: monthEnd };
+      } else if (period === 'last_month') {
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        whereClause.weekStart = { [Op.gte]: monthStart };
+        whereClause.weekEnd = { [Op.lte]: monthEnd };
+      }
+      // 'all' — no date filter
+    }
+
     const reports = await Report.findAll({
-      where: {
-        status: {
-          [Op.ne]: 'draft',
-        },
-      },
+      where: whereClause,
       include: [
-        {
-          model: User,
-          attributes: ['name', 'email', 'title', 'avatar'],
-        },
-        {
-          model: Project,
-          attributes: ['name', 'color'],
-        },
+        { model: User, attributes: ['id', 'name', 'email', 'title', 'role', 'avatar'] },
+        { model: Project, attributes: ['id', 'name', 'color'] },
       ],
       order: [['submittedAt', 'desc']],
     });
 
-    // Map Sequelize user field to userId to match frontend expectations
+    // Remap User -> userId so frontend can access r.userId.name
     const mappedReports = reports.map(r => {
       const data = r.toJSON();
       const { User: user, ...rest } = data;
-      return {
-        ...rest,
-        userId: user,
-      };
+      return { ...rest, userId: user };
     });
 
     res.json({ reports: mappedReports });

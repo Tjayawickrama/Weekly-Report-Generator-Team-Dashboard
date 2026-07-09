@@ -21,19 +21,21 @@ import {
   LinearScale,
   BarElement,
   ArcElement,
+  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut, PolarArea } from 'react-chartjs-2';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, RadialLinearScale, Title, Tooltip, Legend);
 
 export default function ManagerDashboard() {
   const { data: session } = useSession();
   const [stats, setStats] = useState(null);
   const [recentReports, setRecentReports] = useState([]);
   const [contributors, setContributors] = useState([]);
+  const [projectWorkload, setProjectWorkload] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState('this_week');
 
@@ -43,22 +45,33 @@ export default function ManagerDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch(`/api/reports/stats?period=${dateFilter}`);
-      const data = await res.json();
+      const [statsRes, teamRes] = await Promise.all([
+        fetch(`/api/reports/stats?period=${dateFilter}`),
+        fetch(`/api/reports/team?period=${dateFilter}`),
+      ]);
+      const data = await statsRes.json();
       setStats(data.stats);
       setRecentReports(data.recentReports || []);
       setContributors(data.topContributors || []);
+
+      if (teamRes.ok) {
+        const teamData = await teamRes.json();
+        // Build workload by project
+        const projectMap = {};
+        (teamData.reports || []).forEach(r => {
+          const name = r.Project?.name || 'Unknown';
+          const color = r.Project?.color || '#7C3AED';
+          if (!projectMap[name]) projectMap[name] = { tasks: 0, color };
+          projectMap[name].tasks += r.tasksCompleted?.length || 0;
+        });
+        setProjectWorkload(Object.entries(projectMap).map(([name, v]) => ({ name, tasks: v.tasks, color: v.color })));
+      }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
-      // Use fallback data
-      setStats({
-        totalReports: 0,
-        pendingReports: 0,
-        complianceRate: 0,
-        openBlockers: 0,
-      });
+      setStats({ totalReports: 0, pendingReports: 0, complianceRate: 0, openBlockers: 0 });
       setRecentReports([]);
       setContributors([]);
+      setProjectWorkload([]);
     } finally {
       setLoading(false);
     }
@@ -290,6 +303,50 @@ export default function ManagerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Workload by Project Chart */}
+      {projectWorkload.length > 0 && (
+        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <div className="card-header">
+            <h3>Workload Distribution by Project</h3>
+            <span className="card-action">Tasks completed per project</span>
+          </div>
+          <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <PolarArea
+              data={{
+                labels: projectWorkload.map(p => p.name),
+                datasets: [{
+                  data: projectWorkload.map(p => p.tasks),
+                  backgroundColor: projectWorkload.map(p => p.color + 'CC'),
+                  borderColor: projectWorkload.map(p => p.color),
+                  borderWidth: 2,
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'right',
+                    labels: { color: '#94A3B8', font: { size: 12, family: 'Inter' }, usePointStyle: true, pointStyle: 'circle', padding: 14 },
+                  },
+                  tooltip: {
+                    backgroundColor: '#1E1E38', titleColor: '#fff', bodyColor: '#94A3B8',
+                    borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, cornerRadius: 8, padding: 12,
+                    callbacks: { label: (ctx) => ` ${ctx.parsed}r tasks` },
+                  },
+                },
+                scales: {
+                  r: {
+                    ticks: { color: '#64748B', font: { size: 10 }, backdropColor: 'transparent' },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Bottom Row */}
       <div className="two-col-grid">

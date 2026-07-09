@@ -28,18 +28,31 @@ export default function ProjectsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     color: '#7C3AED',
     status: 'active',
+    memberIds: [],
   });
 
   const projectColors = ['#7C3AED', '#3B82F6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#F97316'];
 
   useEffect(() => {
     fetchProjects();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        setAllUsers(data.users || []);
+      }
+    } catch (err) {}
+  };
 
   const fetchProjects = async () => {
     try {
@@ -62,20 +75,30 @@ export default function ProjectsPage() {
     }
 
     try {
-      const url = editingProject ? `/api/projects/${editingProject._id}` : '/api/projects';
+      const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects';
       const method = editingProject ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ name: formData.name, description: formData.description, color: formData.color, status: formData.status }),
       });
 
       if (res.ok) {
+        const data = await res.json();
+        const projectId = data.project?.id || editingProject?.id;
+        // Update members
+        if (projectId) {
+          await fetch(`/api/projects/${projectId}/members`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberIds: formData.memberIds }),
+          });
+        }
         toast(editingProject ? 'Project updated' : 'Project created', 'success');
         setShowModal(false);
         setEditingProject(null);
-        setFormData({ name: '', description: '', color: '#7C3AED', status: 'active' });
+        setFormData({ name: '', description: '', color: '#7C3AED', status: 'active', memberIds: [] });
         fetchProjects();
       } else {
         const data = await res.json();
@@ -93,6 +116,7 @@ export default function ProjectsPage() {
       description: project.description || '',
       color: project.color || '#7C3AED',
       status: project.status || 'active',
+      memberIds: (project.members || []).map(m => m.id),
     });
     setShowModal(true);
   };
@@ -104,7 +128,7 @@ export default function ProjectsPage() {
       if (res.ok) {
         toast('Project deleted', 'success');
         fetchProjects();
-        if (selectedProject?._id === id) setSelectedProject(null);
+        if (selectedProject?.id === id) setSelectedProject(null);
       }
     } catch (err) {
       toast('Failed to delete project', 'error');
@@ -174,7 +198,7 @@ export default function ProjectsPage() {
         ) : (
           filteredProjects.map((project) => (
             <div
-              key={project._id}
+              key={project.id}
               className="card"
               style={{ cursor: 'pointer', borderTop: `3px solid ${project.color || 'var(--primary)'}` }}
               onClick={() => setSelectedProject(project)}
@@ -207,7 +231,7 @@ export default function ProjectsPage() {
                     <button className="btn-icon" style={{ width: '28px', height: '28px' }} onClick={() => handleEdit(project)}>
                       <Edit size={12} />
                     </button>
-                    <button className="btn-icon" style={{ width: '28px', height: '28px' }} onClick={() => handleDelete(project._id)}>
+                    <button className="btn-icon" style={{ width: '28px', height: '28px' }} onClick={() => handleDelete(project.id)}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -302,6 +326,30 @@ export default function ProjectsPage() {
             <option value="completed">Completed</option>
             <option value="archived">Archived</option>
           </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Assign Team Members</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto', padding: '8px', background: 'var(--bg-glass)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            {allUsers.filter(u => u.role === 'team_member').map(u => (
+              <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.memberIds.includes(u.id)}
+                  onChange={(e) => {
+                    const ids = e.target.checked
+                      ? [...formData.memberIds, u.id]
+                      : formData.memberIds.filter(id => id !== u.id);
+                    setFormData({ ...formData, memberIds: ids });
+                  }}
+                />
+                <span style={{ color: 'var(--text-primary)' }}>{u.name}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>{u.title}</span>
+              </label>
+            ))}
+            {allUsers.filter(u => u.role === 'team_member').length === 0 && (
+              <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>No team members found</span>
+            )}
+          </div>
         </div>
       </Modal>
     </div>
