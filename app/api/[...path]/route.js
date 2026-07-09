@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 export const dynamic = 'force-dynamic';
-
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 async function handleProxy(req, { params }) {
   const path = params.path.join('/');

@@ -162,7 +162,7 @@ export default function ProjectsPage() {
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
             {isManager && (
-              <button className="btn btn-primary" onClick={() => { setEditingProject(null); setFormData({ name: '', description: '', color: '#7C3AED', status: 'active' }); setShowModal(true); }}>
+              <button className="btn btn-primary" onClick={() => { setEditingProject(null); setFormData({ name: '', description: '', color: '#7C3AED', status: 'active', memberIds: [] }); setShowModal(true); }}>
                 <Plus size={16} />
                 New Project
               </button>
