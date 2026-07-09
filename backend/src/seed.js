@@ -43,6 +43,8 @@ async function seed() {
     { name: 'Priya Sharma', email: 'priya@pulse.ai', password: passwordHash, role: 'team_member', title: 'QA Engineer' },
     { name: 'David Kim', email: 'david@pulse.ai', password: passwordHash, role: 'team_member', title: 'DevOps Engineer' },
     { name: 'Emma Wilson', email: 'emma@pulse.ai', password: passwordHash, role: 'team_member', title: 'Frontend Developer' },
+    { name: 'Sunil perera', email: 'pererasunil@gmail.com', password: passwordHash, role: 'team_member', title: 'Team Member' },
+    { name: 'kasun kalhara', email: 'kalharakasun@gmail.com', password: passwordHash, role: 'manager', title: 'Manager' },
   ];
 
   const users = [];
