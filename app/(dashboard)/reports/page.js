@@ -61,14 +61,14 @@ export default function ReportHistoryPage() {
     try {
       const res = await fetch(`/api/reports/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setReports(prev => prev.filter(r => r._id !== id));
+        setReports(prev => prev.filter(r => r.id !== id));
       }
     } catch (err) {}
   };
 
   const filteredReports = reports.filter(r => {
     if (statusFilter && r.status !== statusFilter) return false;
-    if (projectFilter && r.project?._id !== projectFilter && r.project !== projectFilter) return false;
+    if (projectFilter && r.projectId !== projectFilter && r.Project?.id !== projectFilter) return false;
     if (search) {
       const s = search.toLowerCase();
       const projectName = r.project?.name || '';
@@ -160,7 +160,7 @@ export default function ReportHistoryPage() {
         >
           <option value="">All Projects</option>
           {projects.map(p => (
-            <option key={p._id} value={p._id}>{p.name}</option>
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
         <select
@@ -205,7 +205,7 @@ export default function ReportHistoryPage() {
               </thead>
               <tbody>
                 {paginatedReports.map((report) => (
-                  <tr key={report._id}>
+                  <tr key={report.id}>
                     <td style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: 'var(--text-sm)' }}>
                       {formatWeek(report.weekStart, report.weekEnd)}
                     </td>
@@ -224,16 +224,16 @@ export default function ReportHistoryPage() {
                     <td>{report.submittedAt ? formatDate(report.submittedAt) : '-'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                        <Link href={`/reports/${report._id}`} className="btn-icon" style={{ width: '30px', height: '30px' }}>
+                        <Link href={`/reports/${report.id}`} className="btn-icon" style={{ width: '30px', height: '30px' }}>
                           <Eye size={14} />
                         </Link>
-                        <Link href={`/reports/${report._id}?edit=true`} className="btn-icon" style={{ width: '30px', height: '30px' }}>
+                        <Link href={`/reports/${report.id}?edit=true`} className="btn-icon" style={{ width: '30px', height: '30px' }}>
                           <Edit size={14} />
                         </Link>
                         <button
                           className="btn-icon"
                           style={{ width: '30px', height: '30px' }}
-                          onClick={() => handleDelete(report._id)}
+                          onClick={() => handleDelete(report.id)}
                         >
                           <Trash2 size={14} />
                         </button>
