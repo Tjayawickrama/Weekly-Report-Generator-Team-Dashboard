@@ -35,16 +35,16 @@ async function seed() {
   const passwordHash = await bcrypt.hash('password123', 12);
 
   const userData = [
-    { name: 'Alex Thompson', email: 'admin@pulse.ai', password: passwordHash, role: 'admin', title: 'Admin' },
-    { name: 'Sarah Chen', email: 'sarah@pulse.ai', password: passwordHash, role: 'manager', title: 'Engineering Manager' },
-    { name: 'James Miller', email: 'james@pulse.ai', password: passwordHash, role: 'team_member', title: 'Senior Developer' },
-    { name: 'Elena Rodriguez', email: 'elena@pulse.ai', password: passwordHash, role: 'team_member', title: 'UI/UX Designer' },
-    { name: 'Marcus Johnson', email: 'marcus@pulse.ai', password: passwordHash, role: 'team_member', title: 'Backend Engineer' },
-    { name: 'Priya Sharma', email: 'priya@pulse.ai', password: passwordHash, role: 'team_member', title: 'QA Engineer' },
-    { name: 'David Kim', email: 'david@pulse.ai', password: passwordHash, role: 'team_member', title: 'DevOps Engineer' },
-    { name: 'Emma Wilson', email: 'emma@pulse.ai', password: passwordHash, role: 'team_member', title: 'Frontend Developer' },
-    { name: 'Sunil perera', email: 'pererasunil@gmail.com', password: passwordHash, role: 'team_member', title: 'Team Member' },
-    { name: 'kasun kalhara', email: 'kalharakasun@gmail.com', password: passwordHash, role: 'manager', title: 'Manager' },
+    { name: 'Ama sumanaweera',       email: 'sumanaweeraama@gmail.com',   password: passwordHash, role: 'admin',       title: 'Admin' },
+    { name: 'Kanishka Kalansooriya', email: 'kkalansooriya@gmail.com',     password: passwordHash, role: 'manager',     title: 'Engineering Manager' },
+    { name: 'Pradeep Suranga',       email: 'surangapradeep@gmail.com',    password: passwordHash, role: 'team_member', title: 'Senior Developer' },
+    { name: 'Shantha Perera',        email: 'pererashantha@gmail.com',     password: passwordHash, role: 'team_member', title: 'UI/UX Designer' },
+    { name: 'Thilak Ranasingha',     email: 'ranasinghathilak@gmail.com',  password: passwordHash, role: 'team_member', title: 'Backend Engineer' },
+    { name: 'Renuka Nanayakkara',    email: 'nanayakkararenuka@gmail.com', password: passwordHash, role: 'team_member', title: 'QA Engineer' },
+    { name: 'Preethi jay',           email: 'jaypreethi@gmail.com',        password: passwordHash, role: 'team_member', title: 'DevOps Engineer' },
+    { name: 'Hiruni Amaya',          email: 'amayahiruni@gmail.com',       password: passwordHash, role: 'team_member', title: 'Frontend Developer' },
+    { name: 'Sunil perera',          email: 'pererasunil@gmail.com',       password: passwordHash, role: 'team_member', title: 'Team Member' },
+    { name: 'kasun kalhara',         email: 'kalharakasun@gmail.com',      password: passwordHash, role: 'manager',     title: 'Manager' },
   ];
 
   const users = [];
